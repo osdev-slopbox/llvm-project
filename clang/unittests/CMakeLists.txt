@@ -75,6 +75,7 @@ function(add_clang_unittest test_name)
   set_property(GLOBAL APPEND PROPERTY CLANG_UNITTEST_LLVM_COMPONENTS ${ARG_LLVM_COMPONENTS})
 endfunction()
 
+add_subdirectory(Ada)
 add_subdirectory(Basic)
 add_subdirectory(Lex)
 add_subdirectory(Parse)

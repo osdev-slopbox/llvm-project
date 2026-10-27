@@ -41,6 +41,8 @@ StringRef clang::languageToString(Language L) {
     return "HIP";
   case Language::HLSL:
     return "HLSL";
+  case Language::Ada:
+    return "Ada";
   }
 
   llvm_unreachable("unhandled language kind");

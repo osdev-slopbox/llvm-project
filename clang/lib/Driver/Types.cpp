@@ -195,6 +195,17 @@ bool types::isAcceptedByFlang(ID Id) {
   }
 }
 
+bool types::isAcceptedByAda(ID Id) {
+  switch (Id) {
+  default:
+    return false;
+
+  case TY_Ada:
+  case TY_PP_Ada:
+    return true;
+  }
+}
+
 bool types::isDerivedFromC(ID Id) {
   switch (Id) {
   default:
@@ -360,6 +371,7 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
       .Case("ll", TY_LLVM_IR)
       .Case("mi", TY_PP_ObjC)
       .Case("mm", TY_ObjCXX)
+      .Case("ada", TY_Ada)
       .Case("adb", TY_Ada)
       .Case("ads", TY_Ada)
       .Case("asm", TY_PP_Asm)
@@ -410,8 +422,9 @@ types::ID types::lookupTypeForTypeSpecifier(const char *Name) {
   for (unsigned i=0; i<numTypes; ++i) {
     types::ID Id = (types::ID) (i + 1);
     if (canTypeBeUserSpecified(Id) &&
-        strcmp(Name, getInfo(Id).Name) == 0)
+        strcmp(Name, getInfo(Id).Name) == 0) {
       return Id;
+    }
   }
   // Accept "cu" as an alias for "cuda" for NVCC compatibility
   if (strcmp(Name, "cu") == 0) {

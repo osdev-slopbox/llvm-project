@@ -1,0 +1,7 @@
+// RUN: %clang_ada -c %S/dep.ads -o %t_dep.o 2>&1 | FileCheck %s --check-prefix=CHECK-EMIT
+// RUN: %clang_ada -c %S/module-loading.adb -o %t.o 2>&1 | FileCheck %s --check-prefix=CHECK-LOAD
+//
+// Test that compiling a body loads the module file for with-ed specs.
+
+// CHECK-EMIT: wrote module file
+// CHECK-LOAD: loading module file

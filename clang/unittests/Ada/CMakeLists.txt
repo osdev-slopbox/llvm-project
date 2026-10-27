@@ -1,0 +1,10 @@
+add_clang_unittest(AdaTests
+  LanguageTest.cpp
+  ParserTest.cpp
+  CLANG_LIBS
+  clangBasic
+  clangAda
+  LINK_LIBS
+  LLVMTestingAnnotations
+  LLVMTestingSupport
+  )

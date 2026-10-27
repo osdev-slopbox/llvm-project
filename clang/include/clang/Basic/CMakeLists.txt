@@ -20,6 +20,7 @@ macro(clang_diag_gen component)
     TARGET ClangDiagnostic${component}Interface)
 endmacro(clang_diag_gen)
 
+clang_diag_gen(Ada)
 clang_diag_gen(Analysis)
 clang_diag_gen(AST)
 clang_diag_gen(CodeGen)

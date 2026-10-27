@@ -101,7 +101,8 @@ class Driver {
     CPPMode,
     CLMode,
     FlangMode,
-    DXCMode
+    DXCMode,
+    AdaMode
   } Mode;
 
   enum SaveTempsMode {
@@ -234,6 +235,9 @@ public:
 
   /// Whether the driver should follow dxc.exe like behavior.
   bool IsDXCMode() const { return Mode == DXCMode; }
+
+  /// Whether the driver should invoke the Ada 2012 frontend for Ada inputs.
+  bool IsAdaMode() const { return Mode == AdaMode; }
 
   /// Only print tool bindings, don't build any jobs.
   LLVM_PREFERRED_TYPE(bool)
@@ -718,6 +722,10 @@ public:
   /// ShouldUseFlangCompiler - Should the flang compiler be used to
   /// handle this action.
   bool ShouldUseFlangCompiler(const JobAction &JA) const;
+
+  /// ShouldUseAdaCompiler - Should the Ada 2012 frontend be used to
+  /// handle this action.
+  bool ShouldUseAdaCompiler(const JobAction &JA) const;
 
   /// ShouldEmitStaticLibrary - Should the linker emit a static library.
   bool ShouldEmitStaticLibrary(const llvm::opt::ArgList &Args) const;

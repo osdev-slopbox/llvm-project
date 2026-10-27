@@ -97,6 +97,13 @@ def FC1Option : OptionVisibility;
 // are made available when the driver is running in DXC compatibility mode.
 def DXCOption : OptionVisibility;
 
+// AdaOption - This option should be visible when the driver is running in
+// Ada mode (clang-ada / --driver-mode=ada).
+def AdaOption : OptionVisibility;
+
+// AC1Option - This option should be accepted by clang -ac1.
+def AC1Option : OptionVisibility;
+
 /////////
 // Docs
 
@@ -899,6 +906,8 @@ def warning_suppression_mappings_EQ : Joined<["--"],
   "for file format.">, Visibility<[ClangOption, CLOption, CC1Option]>;
 def Wall : Flag<["-"], "Wall">, Group<W_Group>, Flags<[HelpHidden]>,
   Visibility<[ClangOption, CC1Option, FlangOption]>;
+def Werror : Flag<["-"], "Werror">, Group<W_Group>, Flags<[HelpHidden]>,
+  Visibility<[ClangOption, CC1Option, FlangOption, AdaOption]>;
 def WCL4 : Flag<["-"], "WCL4">, Group<W_Group>, Flags<[HelpHidden]>,
   Visibility<[ClangOption, CC1Option]>;
 def Wsystem_headers : Flag<["-"], "Wsystem-headers">, Group<W_Group>,
@@ -8634,6 +8643,11 @@ let Visibility = [CC1Option] in {
 def cc1 : Flag<["-"], "cc1">;
 def cc1as : Flag<["-"], "cc1as">;
 
+// This isn't normally used, it is just here so we can parse an
+// Ada CompilerInvocation out of a driver-derived argument vector.
+def ac1 : Flag<["-"], "ac1">,
+  Visibility<[AC1Option]>;
+
 def ast_merge : Separate<["-"], "ast-merge">,
   MetaVarName<"<ast file>">,
   HelpText<"Merge the given AST file into the translation unit being compiled.">,
@@ -10223,3 +10237,16 @@ def wasm_opt : Flag<["--"], "wasm-opt">,
   Group<m_Group>,
   HelpText<"Enable the wasm-opt optimizer (default)">,
   MarshallingInfoNegativeFlag<LangOpts<"NoWasmOpt">>;
+
+//===----------------------------------------------------------------------===//
+// Ada Options
+//===----------------------------------------------------------------------===//
+
+def a2012 : Flag<["-"], "a2012">,
+  Group<m_Group>,
+  Visibility<[AdaOption]>,
+  HelpText<"Conform to the Ada 2012 RM">;
+
+def fno_ada_contracts : Flag<["-"], "fno-ada-contracts">,
+  Group<m_Group>,
+  HelpText<"Disable Ada contract (Pre/Post) assertions">;

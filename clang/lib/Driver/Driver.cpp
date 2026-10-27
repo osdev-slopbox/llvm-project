@@ -257,6 +257,7 @@ void Driver::setDriverMode(StringRef Value) {
                    .Case("cl", CLMode)
                    .Case("flang", FlangMode)
                    .Case("dxc", DXCMode)
+                   .Case("ada", AdaMode)
                    .Default(std::nullopt))
     Mode = *M;
   else
@@ -3344,8 +3345,9 @@ void Driver::BuildInputs(const ToolChain &TC, DerivedArgList &Args,
           Args.hasArgNoClaim(options::OPT_hipstdpar))
         Ty = types::TY_HIP;
 
-      if (DiagnoseInputExistence(Value, Ty, /*TypoCorrect=*/true))
+      if (DiagnoseInputExistence(Value, Ty, /*TypoCorrect=*/true)) {
         Inputs.push_back(std::make_pair(Ty, A));
+      }
 
     } else if (A->getOption().matches(options::OPT__SLASH_Tc)) {
       StringRef Value = A->getValue();
@@ -4461,8 +4463,9 @@ Action *Driver::ConstructPhaseAction(
     return C.MakeAction<PrecompileJobAction>(Input, OutputTy);
   }
   case phases::Compile: {
-    if (Args.hasArg(options::OPT_fsyntax_only))
+    if (Args.hasArg(options::OPT_fsyntax_only)) {
       return C.MakeAction<CompileJobAction>(Input, types::TY_Nothing);
+    }
     if (Args.hasArg(options::OPT_rewrite_objc))
       return C.MakeAction<CompileJobAction>(Input, types::TY_RewrittenObjC);
     if (Args.hasArg(options::OPT_rewrite_legacy_objc))
@@ -6443,6 +6446,23 @@ bool Driver::ShouldUseFlangCompiler(const JobAction &JA) const {
   return true;
 }
 
+bool Driver::ShouldUseAdaCompiler(const JobAction &JA) const {
+  // Say "no" if there is not exactly one input of a type the Ada 2012
+  // frontend understands.
+  if (JA.size() != 1)
+    return false;
+  if (!types::isAcceptedByAda((*JA.input_begin())->getType()))
+    return false;
+
+  // And say "no" if this is not a kind of action the Ada 2012 frontend
+  // understands. P0 only handles the precompile/compile/backend pipeline.
+  if (!isa<PreprocessJobAction>(JA) && !isa<PrecompileJobAction>(JA) &&
+      !isa<CompileJobAction>(JA) && !isa<BackendJobAction>(JA))
+    return false;
+
+  return true;
+}
+
 bool Driver::ShouldEmitStaticLibrary(const ArgList &Args) const {
   // Only emit static library if the flag is set explicitly.
   if (Args.hasArg(options::OPT_emit_static_lib))
@@ -6522,6 +6542,8 @@ Driver::getOptionVisibilityMask(bool UseDriverMode) const {
     return llvm::opt::Visibility(options::DXCOption);
   if (IsFlangMode())
     return llvm::opt::Visibility(options::FlangOption);
+  if (IsAdaMode())
+    return llvm::opt::Visibility(options::ClangOption | options::AdaOption);
   return llvm::opt::Visibility(options::ClangOption);
 }
 
@@ -6539,6 +6561,8 @@ const char *Driver::getExecutableForDriverMode(DriverMode Mode) {
     return "flang";
   case DXCMode:
     return "clang-dxc";
+  case AdaMode:
+    return "clang-ada";
   }
 
   llvm_unreachable("Unhandled Mode");

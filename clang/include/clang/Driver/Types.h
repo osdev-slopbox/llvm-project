@@ -69,6 +69,9 @@ namespace types {
   /// isAcceptedByFlang - Can flang handle this input type.
   bool isAcceptedByFlang(ID Id);
 
+  /// isAcceptedByAda - Can the Ada 2012 frontend handle this input type.
+  bool isAcceptedByAda(ID Id);
+
   /// isDerivedFromC - Is the input derived from C.
   ///
   /// That is, does the lexer follow the rules of

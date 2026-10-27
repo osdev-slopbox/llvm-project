@@ -1,0 +1,6 @@
+// RUN: %clang_ada -c %S/emission.ads -o %t.o 2>&1 | FileCheck %s
+// RUN: test -f %t.o
+//
+// Test that compiling a spec emits both an object file and a module file.
+
+// CHECK: wrote module file

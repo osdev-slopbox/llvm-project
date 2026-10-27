@@ -12,6 +12,7 @@
 #include "ToolChains/Arch/AMDGPU.h"
 #include "ToolChains/Arch/ARM.h"
 #include "ToolChains/Arch/RISCV.h"
+#include "ToolChains/Ada.h"
 #include "ToolChains/Clang.h"
 #include "ToolChains/Flang.h"
 #include "ToolChains/InterfaceStubs.h"
@@ -591,6 +592,7 @@ static const DriverSuffix *FindDriverSuffix(StringRef ProgName, size_t &Pos) {
       // For backwards compatibility, we create a symlink for `flang` called
       // `flang-new`. This will be removed in the future.
       {"flang-new", "--driver-mode=flang"},
+      {"ada", "--driver-mode=ada"},
       {"clang-dxc", "--driver-mode=dxc"},
   };
 
@@ -719,6 +721,12 @@ Tool *ToolChain::getFlang() const {
   if (!Flang)
     Flang.reset(new tools::Flang(*this));
   return Flang.get();
+}
+
+Tool *ToolChain::getAda() const {
+  if (!Ada)
+    Ada.reset(new tools::Ada(*this));
+  return Ada.get();
 }
 
 Tool *ToolChain::buildAssembler() const {
@@ -1282,6 +1290,7 @@ bool ToolChain::needsGCovInstrumentation(const llvm::opt::ArgList &Args) {
 
 Tool *ToolChain::SelectTool(const JobAction &JA) const {
   if (D.IsFlangMode() && getDriver().ShouldUseFlangCompiler(JA)) return getFlang();
+  if (D.IsAdaMode() && getDriver().ShouldUseAdaCompiler(JA)) return getAda();
   if (getDriver().ShouldUseClangCompiler(JA)) return getClang();
   Action::ActionClass AC = JA.getKind();
   if (AC == Action::AssembleJobClass && useIntegratedAs() &&

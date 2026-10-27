@@ -1,0 +1,6 @@
+// Verify that the ac1 frontend can parse a valid Ada library unit.
+// This test replaced the original P0 stub test once ac1 was implemented.
+//
+// RUN: %clang_ada --driver-mode=ada -x ada -fsyntax-only %S/Inputs/hello.adb
+//
+// If we reach here, ac1 successfully parsed the file.

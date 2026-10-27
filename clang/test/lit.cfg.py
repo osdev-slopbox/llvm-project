@@ -40,6 +40,9 @@ config.suffixes = [
     ".cuh",
     ".hip",
     ".hlsl",
+    ".adb",
+    ".ads",
+    ".ada",
     ".ll",
     ".cl",
     ".clcpp",
@@ -110,6 +113,11 @@ tool_dirs = [config.clang_tools_dir, config.llvm_tools_dir]
 tools = [
     "apinotes-test",
     "c-index-test",
+    ToolSubst(
+        "%clang_ada",
+        command=FindTool("clang-ada"),
+        unresolved="ignore",
+    ),
     "clang-diff",
     "clang-format",
     "clang-repl",
@@ -314,6 +322,61 @@ config.substitutions.append(
         ),
     )
 )
+
+# Ada runtime link flags.  The clang-ada link step needs explicit toolchain
+# paths in the devshell, where glibc and GNAT live in the nix store.  Detect
+# at config time; tests that link+run Ada programs REQUIRES: ada_runtime_link.
+def _compute_ada_link_flags():
+    def run_ok(cmd):
+        try:
+            p = subprocess.run(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+            )
+            if p.returncode == 0:
+                return p.stdout.strip()
+        except OSError:
+            pass
+        return ""
+
+    # Locate glibc via the dynamic linker recorded for a known glibc binary.
+    # The host /lib64 may be a musl stub, so only trust a "=> resolved" line.
+    ldd_out = run_ok(["ldd", lit.util.which("ls") or "/bin/ls"])
+    glibc_lib64 = ""
+    for line in ldd_out.splitlines():
+        if "ld-linux-x86-64.so.2" in line and "=>" in line:
+            resolved = line.split("=>", 1)[1].split(" (0x")[0].strip()
+            if resolved.startswith("/"):
+                glibc_lib64 = os.path.dirname(resolved)
+                break
+    if not glibc_lib64:
+        return None
+
+    libgcc = run_ok(["gcc", "-print-libgcc-file-name"])
+    gnat_lib = run_ok(["gcc", "-print-file-name=libgcc_s.so"])
+    if not libgcc or not gnat_lib:
+        return None
+    gnat_root = re.split(r"/lib/gcc/", libgcc, 1)[0]
+    gnat_lib_dir = os.path.dirname(gnat_lib)
+
+    return (
+        "--gcc-toolchain=%s -B %s -B %s -L %s -L %s "
+        "-Wl,--dynamic-linker=%s/ld-linux-x86-64.so.2 -Wl,-rpath,%s"
+        % (
+            gnat_root,
+            glibc_lib64,
+            gnat_lib_dir,
+            glibc_lib64,
+            gnat_lib_dir,
+            glibc_lib64,
+            glibc_lib64,
+        )
+    )
+
+
+_ada_link_flags = _compute_ada_link_flags()
+if _ada_link_flags:
+    config.substitutions.append(("%ada_link_flags", _ada_link_flags))
+    config.available_features.add("ada_runtime_link")
 
 # Determine whether the test target is compatible with execution on the host.
 if "aarch64" in config.host_arch:

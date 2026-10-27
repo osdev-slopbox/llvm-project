@@ -15,6 +15,7 @@
 #define LLVM_CLANG_BASIC_ALLDIAGNOSTICS_H
 
 #include "clang/Basic/DiagnosticAST.h"
+#include "clang/Basic/DiagnosticAda.h"
 #include "clang/Basic/DiagnosticAnalysis.h"
 #include "clang/Basic/DiagnosticCodeGen.h"
 #include "clang/Basic/DiagnosticComment.h"

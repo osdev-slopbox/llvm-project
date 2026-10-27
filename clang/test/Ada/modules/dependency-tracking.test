@@ -1,0 +1,7 @@
+// RUN: %clang_ada -c %S/dependency-tracking.adb -o %t.o -MD -MF %t.d 2>&1 | FileCheck %s --check-prefix=CHECK-COMPILE
+// RUN: grep "dep" %t.d | FileCheck %s --check-prefix=CHECK-DEP
+//
+// Test that the dependency file includes with-clause dependencies.
+
+// CHECK-COMPILE: running code generation
+// CHECK-DEP: dep.ads

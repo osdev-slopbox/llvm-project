@@ -43,6 +43,7 @@ add_clang_tool(clang
   driver.cpp
   cc1_main.cpp
   cc1as_main.cpp
+  ac1_main.cpp
   cc1gen_reproducer_main.cpp
 
   DEPENDS
@@ -58,6 +59,7 @@ setup_host_tool(clang CLANG clang_exe clang_target)
 
 clang_target_link_libraries(clang
   PRIVATE
+  clangAda
   clangBasic
   clangCodeGen
   clangDriver
@@ -82,6 +84,10 @@ add_dependencies(clang clang-resource-headers)
 
 if(NOT CLANG_LINKS_TO_CREATE)
   set(CLANG_LINKS_TO_CREATE clang++ clang-cl clang-cpp)
+endif()
+
+if(NOT "clang-ada" IN_LIST CLANG_LINKS_TO_CREATE)
+  list(APPEND CLANG_LINKS_TO_CREATE clang-ada)
 endif()
 
 set(HLSL_LINK clang-dxc)

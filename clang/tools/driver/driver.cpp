@@ -88,6 +88,8 @@ extern int cc1_main(ArrayRef<const char *> Argv, const char *Argv0,
                     void *MainAddr);
 extern int cc1as_main(ArrayRef<const char *> Argv, const char *Argv0,
                       void *MainAddr);
+extern int ac1_main(ArrayRef<const char *> Argv, const char *Argv0,
+                    void *MainAddr);
 extern int cc1gen_reproducer_main(ArrayRef<const char *> Argv,
                                   const char *Argv0, void *MainAddr,
                                   const llvm::ToolContext &);
@@ -239,6 +241,36 @@ static int ExecuteCC1Tool(SmallVectorImpl<const char *> &ArgV,
   return 1;
 }
 
+static int ExecuteAC1Tool(SmallVectorImpl<const char *> &ArgV,
+                          const llvm::ToolContext &ToolContext,
+                          IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS) {
+  // If we call the ac1 tool from the clangDriver library (through
+  // Driver::AC1Main), we need to clean up the options usage count. The options
+  // are currently global, and they might have been used previously by the
+  // driver.
+  llvm::cl::ResetAllOptionOccurrences();
+
+  llvm::BumpPtrAllocator A;
+  llvm::cl::ExpansionContext ECtx(A, llvm::cl::TokenizeGNUCommandLine,
+                                  VFS.get());
+  if (llvm::Error Err = ECtx.expandResponseFiles(ArgV)) {
+    llvm::errs() << toString(std::move(Err)) << '\n';
+    return 1;
+  }
+
+  void *GetExecutablePathVP = (void *)(intptr_t)GetExecutablePath;
+
+  StringRef Tool = ArgV[1];
+  if (Tool == "-ac1")
+    return ac1_main(ArrayRef(ArgV).slice(1), ArgV[0], GetExecutablePathVP);
+
+  // Reject unknown tools.
+  llvm::errs()
+      << "error: unknown integrated tool '" << Tool << "'. "
+      << "Valid tools include '-ac1'.\n";
+  return 1;
+}
+
 int clang_main(int Argc, char **Argv, const llvm::ToolContext &ToolContext) {
   noteBottomOfStack();
   llvm::setBugReportMsg("PLEASE submit a bug report to " BUG_REPORT_URL
@@ -275,6 +307,12 @@ int clang_main(int Argc, char **Argv, const llvm::ToolContext &ToolContext) {
     // CC1Command::Execute() for better crash recovery.
     auto EnableSandbox = llvm::sys::sandbox::scopedEnable();
     return ExecuteCC1Tool(Args, ToolContext, VFS);
+  }
+
+  // Handle -ac1 integrated tools.
+  if (Args.size() >= 2 && StringRef(Args[1]) == "-ac1") {
+    auto EnableSandbox = llvm::sys::sandbox::scopedEnable();
+    return ExecuteAC1Tool(Args, ToolContext, VFS);
   }
 
   // Handle options that need handling before the real command line parsing in

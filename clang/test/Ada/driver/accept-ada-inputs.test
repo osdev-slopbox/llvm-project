@@ -1,0 +1,10 @@
+// Verify that the Ada driver accepts .ads, .adb and .ada inputs (and -x ada)
+// and routes them to the ac1 frontend, which parses them successfully.
+//
+// RUN: %clang_ada --driver-mode=ada -fsyntax-only %S/Inputs/hello.adb
+//
+// RUN: %clang_ada --driver-mode=ada -fsyntax-only %S/../Inputs/empty.ads
+//
+// RUN: %clang_ada --driver-mode=ada -fsyntax-only %S/../Inputs/empty.ada
+//
+// RUN: %clang_ada --driver-mode=ada -x ada -fsyntax-only %S/Inputs/hello.adb

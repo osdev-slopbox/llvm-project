@@ -484,6 +484,19 @@ void tools::gnutools::Linker::ConstructJob(Compilation &C, const JobAction &JA,
     CmdArgs.push_back("-lm");
   }
 
+  // Additional linker set-up for Ada. The in-tree runtime
+  // (libclangAdaRuntime.a) provides main() and the registration and
+  // exception machinery; like the Fortran runtime it must come before the
+  // C runtime below (AddRunTimeLibs).
+  if (D.IsAdaMode() &&
+      !Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
+    SmallString<256> AdaLibPath = llvm::sys::path::parent_path(D.Dir);
+    llvm::sys::path::append(AdaLibPath, "lib");
+    if (llvm::sys::fs::is_directory(AdaLibPath))
+      CmdArgs.push_back(Args.MakeArgString("-L" + AdaLibPath));
+    CmdArgs.push_back("-lclangAdaRuntime");
+  }
+
   if (!Args.hasArg(options::OPT_nostdlib, options::OPT_r)) {
     if (!Args.hasArg(options::OPT_nodefaultlibs)) {
       if (IsStatic || IsStaticPIE)

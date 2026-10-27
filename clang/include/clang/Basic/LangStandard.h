@@ -41,6 +41,7 @@ enum class Language : uint8_t {
   CUDA,
   HIP,
   HLSL,
+  Ada,
   ///@}
 };
 StringRef languageToString(Language L);
